@@ -1,1 +1,2 @@
 wheel==0.23.0
+daemonize==2.3.1
