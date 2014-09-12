@@ -1,9 +1,24 @@
 import os, urllib, json, sys, hmac
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from subprocess import call
 
 #from time import sleep
 #from daemonize import Daemonize
+
+config = {
+    'port': 5454,
+    'branches': [
+        {
+            'branch': 'master',
+            'path': '/home/api'
+        },
+        {
+            'branch': 'qa',
+            'path': '/home/api-qa'
+        }
+    ]
+}
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -67,19 +82,59 @@ class RepositoryEvent():
         self.type = type_of_event
         self.branch = branch
         self.url = url
+        self.config = {}
+        self.dispatch()
+
+    def dispatch(self):
+        if self.type == 'push':
+            self.deploy()
 
     def clone(self):
         return
 
     def deploy(self):
+        self.clean()
+
+        # Create TMP folder
+        # Clone to TMP
+
+        # Read current version's config
+        # Do actions
+        # Run start script
+
+        # Delete config cache
+        # Copy current config to config cache
+        # Delete TMP folder
+
+        # Done
+
+        return
+
+    def clean(self):
+        # If config cache exists
+            # Load old config
+
+            # Run stop scripts
+
+            # For each applications
+                # Delete content of root
+
+        # Else
+            # Create folders
+
+        # Done
+        return
+
+    def parseConfig(self, path):
+        # Read
         return
 
 
 def main():
     print('======================= Ferrymang =======================')
     if len(sys.argv) > 1:
-        print('Ferrymang is now listening on port 5454...')
-        httpd = HTTPServer(('127.0.0.1', 5454), RequestHandler)
+        print('Ferrymang is now listening on port ' + str(config['port']) + '...')
+        httpd = HTTPServer(('127.0.0.1', config['port']), RequestHandler)
         httpd.serve_forever()
     else:
         print('Must specify Github token.')
