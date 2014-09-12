@@ -83,6 +83,7 @@ class RepositoryEvent():
         self.branch = branch
         self.url = url
         self.config = {}
+        self.workingDir = '/tmp/ferrymang'
         self.dispatch()
 
     def dispatch(self):
@@ -90,25 +91,27 @@ class RepositoryEvent():
             self.deploy()
 
     def clone(self):
+
         return
 
     def deploy(self):
         self.clean()
 
-        # Create TMP folder
-        # Clone to TMP
+        if FileSystem.createDirectory(self.workingDir):
+            self.clone()
+            # Read current version's config
+            # Do actions
+            # Run start script
 
-        # Read current version's config
-        # Do actions
-        # Run start script
+            # Delete config cache
+            # Copy current config to config cache
+            # Delete TMP folder
 
-        # Delete config cache
-        # Copy current config to config cache
-        # Delete TMP folder
+            # Done
+        else:
+            return False
 
-        # Done
-
-        return
+        return True
 
     def clean(self):
         # If config cache exists
@@ -128,6 +131,20 @@ class RepositoryEvent():
     def parseConfig(self, path):
         # Read
         return
+
+
+class FileSystem():
+
+    @staticmethod
+    def createDirectory(path):
+        if os.path.isdir(path):
+            return True
+        else:
+            return os.mkdir(path)
+
+    @staticmethod
+    def move(fromPath, toPath):
+        return call('mv', fromPath, toPath)
 
 
 def main():
