@@ -1,10 +1,11 @@
-import os, urllib, json, sys, hmac
+import os, argparse, urllib, json, sys, hmac
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from subprocess import call
+from pygit2 import clone_repository, Keypair
 
-#from time import sleep
-#from daemonize import Daemonize
+# from time import sleep
+# from daemonize import Daemonize
 
 config = {
     'port': 5454,
@@ -20,8 +21,19 @@ config = {
     ]
 }
 
+parser = argparse.ArgumentParser(description='Github webhook event listener.')
+parser.add_argument('--pubkpath', required=True, help='Path to the SSH public key.')
+parser.add_argument('--prvkpath', required=True, help='Path to the SSH private key.')
+parser.add_argument('--pkpasswd', required=True,
+                    help='Keypair password')
+parser.add_argument('--pkusername', required=True, help='Keypair username')
+parser.add_argument('--signature', required=True, help='Signature token as configured in your repository\'s settings.')
+parser.add_argument('--giturl', help='Repository url used if no config file is cached.')
+arguments = parser.parse_args()
+
 
 class RequestHandler(BaseHTTPRequestHandler):
+    signature = arguments.signature
 
     def do_GET(self):
         self.send_response(200)
@@ -37,7 +49,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             if event_type == 'push':
                 print('Got push event, instantiate repository event')
-                repository_event = RepositoryEvent('push', parsed_request['branch'], parsed_request['data']['repository']['git_url'])
+                repository_event = RepositoryEvent('push', parsed_request['branch'],
+                                                   parsed_request['data']['repository']['git_url'])
                 self.respond(200)
             else:
                 print('Unsupported event')
@@ -48,10 +61,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def verifySignature(self, parsed_request):
         github_signature = self.headers.get('X-Hub-Signature')
-        if len(github_signature) > 0:
-
-            hmac_obj = hmac.new(str.encode(sys.argv[1]), parsed_request['raw'], 'sha1')
-            secret_key = 'sha1='+hmac_obj.hexdigest()
+        if len(self.signature) > 0:
+            hmac_obj = hmac.new(str.encode(self.signature), parsed_request['raw'], 'sha1')
+            secret_key = 'sha1=' + hmac_obj.hexdigest()
 
             return secret_key == github_signature
         else:
@@ -78,28 +90,43 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 class RepositoryEvent():
+    gitInitUrl = arguments.giturl or ''
+
     def __init__(self, type_of_event, branch, url):
         self.type = type_of_event
         self.branch = branch
         self.url = url
-        self.config = {}
-        self.workingDir = '/tmp/ferrymang'
-        self.dispatch()
+        self.tmpDir = '/tmp/ferrymang'
+        self.tmpRepoDir = FileSystem.join(self.tmpDir, 'repository')
+        self.tmpCacheDir = FileSystem.join(self.tmpDir, 'cache')
+        self.keypair = Keypair('ferrymang', arguments.pubkpath, arguments.prvkpath,'')
+
+        FileSystem.createDirectory(self.tmpDir)
+
+        self.config = self.loadConfig()
+
+        #self.dispatch()
 
     def dispatch(self):
         if self.type == 'push':
             self.deploy()
 
-    def clone(self):
+    def clone(self, url):
+        if FileSystem.createDirectory(self.tmpRepoDir):
+            print('Cloning')
+            repository = clone_repository(url, self.tmpRepoDir, credentials=self.keypair)
+            print(repository)
+            return True
 
-        return
+        return False
 
     def deploy(self):
         self.clean()
 
-        if FileSystem.createDirectory(self.workingDir):
-            self.clone()
+        if FileSystem.createDirectory(self.tmpDir):
+            "self.clone('')"
             # Read current version's config
+
             # Do actions
             # Run start script
 
@@ -114,30 +141,46 @@ class RepositoryEvent():
         return True
 
     def clean(self):
-        # If config cache exists
-            # Load old config
+        # Run stop scripts
 
-            # Run stop scripts
-
-            # For each applications
-                # Delete content of root
-
-        # Else
-            # Create folders
-
-        # Done
+        # For each applications
+        # Delete content of root
         return
+
+    def loadConfig(self):
+        config_obj = {}
+        cached_config_path = FileSystem.join(self.tmpCacheDir, 'config.json')
+        if FileSystem.fileExists(cached_config_path):
+            print('File exists load config.')
+            config_obj = self.parseConfig(cached_config_path)
+        elif len(sys.argv) > 2:
+            print('Get repository from command line.')
+            if self.clone(RepositoryEvent.gitInitUrl):
+                if FileSystem.createDirectory('/tmp/ferrymang/cache'):
+                    FileSystem.move(FileSystem.join(self.tmpRepoDir, 'config.json'), cached_config_path)
+                    config_obj = self.parseConfig(cached_config_path)
+        return config_obj
 
     def parseConfig(self, path):
-        # Read
-        return
+        return {}
 
 
 class FileSystem():
+    @staticmethod
+    def join(path, path2):
+        return os.path.join(path, path2)
+
+    @staticmethod
+    def dirExists(path):
+        return os.path.isdir(path)
+
+    @staticmethod
+    def fileExists(path):
+        return os.path.isfile(path)
 
     @staticmethod
     def createDirectory(path):
-        if os.path.isdir(path):
+        if FileSystem.dirExists(path):
             return True
         else:
             return os.mkdir(path)

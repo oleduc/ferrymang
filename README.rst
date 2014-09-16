@@ -17,6 +17,18 @@ A git deployment tool.
 * Free software: BSD license
 * Documentation: https://ferrymang.readthedocs.org.
 
+Installation
+------------
+
+Requirements:
+* python3.x
+* libssh2: http://www.libssh2.org/
+* pygit2: http://www.pygit2.org/install.html
+
+Usage
+-----
+ferrymang.py [-h] --pubkpath PUBKPATH --prvkpath PRVKPATH --pkpasswd PKPASSWD --pkusername PKUSERNAME --signature SIGNATURE [--giturl GITURL]
+
 Features
 --------
 
