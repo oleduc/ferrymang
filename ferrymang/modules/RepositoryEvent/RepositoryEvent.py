@@ -30,7 +30,7 @@ class RepositoryEvent():
     def clone(self, url):
         FileSystem.delete(self.tmpRepoDir)
         if FileSystem.createDirectory(self.tmpRepoDir):
-            print('Downloading repository...')
+            print('Downloading repository...', url)
             repository = clone_repository(url, self.tmpRepoDir, credentials=self.Keypair, checkout_branch=self.branch)
             print('Done.')
             return not repository.is_empty
@@ -48,6 +48,11 @@ class RepositoryEvent():
         if FileSystem.delete(self.tmpCacheDir) and FileSystem.createDirectory(self.tmpCacheDir):
             if FileSystem.copy(FileSystem.join(self.tmpRepoDir, self.configFileName), self.tmpCacheDir):
                 print('Cached configuration file.')
+
+        # Create root directory if configured
+        if self.config['root']:
+            if FileSystem.createDirectory(self.config['root']):
+                print('Created root directory as configured.')
 
         if self.config['actions']:
             for actions in self.config['actions']:
@@ -92,6 +97,7 @@ class RepositoryEvent():
         if self.config['applications']:
             for key in self.config['applications']:
                 script_path = FileSystem.join(self.config['applications'][key]['path'], name)
+                script_path = FileSystem.join(self.config['root'], script_path)
                 script_path = FileSystem.resolve(script_path)
                 if FileSystem.fileExists(script_path):
                     print('Running script', script_path)

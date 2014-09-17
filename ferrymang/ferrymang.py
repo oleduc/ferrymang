@@ -42,7 +42,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 keypair = {"pubkpath": arguments.pubkpath, "prvkpath": arguments.prvkpath, "pkpasswd": arguments.pkpasswd}
 
                 repository_event = RepositoryEvent('push', parsed_request['branch'],
-                                                   parsed_request['data']['repository']['git_url'],
+                                                   parsed_request['data']['repository']['ssh_url'],
                                                    keypair,
                                                    git_init_url=arguments.giturl)
                 self.respond(200)
