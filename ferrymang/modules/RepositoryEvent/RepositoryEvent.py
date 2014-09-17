@@ -69,7 +69,7 @@ class RepositoryEvent():
                     FileSystem.move(from_path, to_path)
                     print('Done...')
 
-        self.runScripts(self.config['start'])
+        self.runScripts('start')
 
         # Delete TMP folder
         if FileSystem.delete(self.tmpRepoDir):
@@ -79,7 +79,7 @@ class RepositoryEvent():
 
     def clean(self):
 
-        self.runScripts(self.config['stop'])
+        self.runScripts('stop')
         self.deleteApplicationsRoots()
 
         FileSystem.delete(FileSystem.join(self.tmpCacheDir, self.configFileName))
@@ -89,25 +89,35 @@ class RepositoryEvent():
     def deleteApplicationsRoots(self):
         if self.config['applications']:
             for key in self.config['applications']:
-                if FileSystem.exists(self.config['applications'][key]['path']):
-                    print('Delete applications root', self.config['applications'][key]['path'])
-                    FileSystem.delete(FileSystem.resolve(self.config['applications'][key]['path']))
+                app_path = self.rootAndResolve(self.config['applications'][key]['path'])
+                if FileSystem.exists(app_path) and FileSystem.delete(app_path):
+                    print('Deleted applications root', app_path)
 
-    def runScripts(self, name):
+    def runScripts(self, script_name):
         if self.config['applications']:
             for key in self.config['applications']:
-                script_path = FileSystem.join(self.config['applications'][key]['path'], name)
-                script_path = FileSystem.join(self.config['root'], script_path)
-                script_path = FileSystem.resolve(script_path)
-                if FileSystem.fileExists(script_path):
-                    print('Running script', script_path)
-                    if subprocess.call(script_path, shell=True):
-                        print('Ran script successfully', script_path)
-                        FileSystem.delete(FileSystem.resolve(self.config['applications'][key]['path']))
+                application_path = self.rootAndResolve(self.config['applications'][key]['path'])
+                script = self.config['applications'][key][script_name]
+                if script.get('path') is not None:
+                    script_path = FileSystem.join(self.config['applications'][key]['path'], script['path'])
+                    script_path = self.rootAndResolve(script_path)
+
+                    if FileSystem.fileExists(script_path):
+                        print('Running script', script_path)
+                        if subprocess.call('cd '+application_path+' && '+script_path+' '+script['parameters'], shell=True):
+                            print('Ran script successfully', script_path)
+                        else:
+                            print('Ran script but unsuccessfully', script_path)
                     else:
-                        print('Ran script but unsuccessfully', script_path)
-                else:
-                    print('Failed to run a script; unavailable script', script_path)
+                        print('Failed to run a script; unavailable script', script_path)
+                elif script.get('commands') is not None:
+                    for command in script['commands']:
+                        command = command.replace('{path}', application_path)
+                        print('Running command "'+command+'"')
+                        if subprocess.call('cd '+application_path+' && '+command, shell=True):
+                            print('Ran command successfully', command)
+                        else:
+                            print('Ran command but unsuccessfully', command)
 
     def loadCachedConfig(self):
         config_obj = {}
@@ -126,16 +136,36 @@ class RepositoryEvent():
     def parseConfig(self, path):
         raw_content = FileSystem.readFile(path)
         parsed_content = json.loads(raw_content)
-        results = self.replacePathsVariables(parsed_content)
-        # pp = pprint.PrettyPrinter(indent=4)
-        # pp.pprint(results)
+        results = self.replaceConfigVariables(parsed_content)
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(results)
         return results
 
-    def replacePathsVariables(self, config):
-        for key in config['applications']:
-            application_config = config['applications'][key]
-            config['applications'][key]['path'] = application_config['path'].replace('{branch}', self.branch)
-        for action in config['actions']:
-            action['to'] = action['to'].replace('{branch}', self.branch)
+    def rootAndResolve(self, path):
+        path = FileSystem.join(self.config['root'], path)
+        return FileSystem.resolve(path)
+
+    def replaceConfigVariables(self, config):
+        # Todo: Leverage generators
+
+        for top_key in config:
+            key_type = type(config[top_key])
+            print('Iterating', top_key)
+            config[top_key] = self.configVarIterator(config[top_key])
 
         return config
+
+    def configVarIterator(self, var):
+        key_type = type(var)
+        if key_type == str:
+            print('BREFORE REPLACE', var)
+            var = var.replace('{branch}', self.branch)
+            print('AFTER REPLACE', var)
+            return var
+        if key_type == dict:
+            for dic_key in var:
+                var[dic_key] = self.configVarIterator(var[dic_key])
+        if key_type == list:
+            for key, item in enumerate(var):
+                var[key] = self.configVarIterator(item)
+        return var
