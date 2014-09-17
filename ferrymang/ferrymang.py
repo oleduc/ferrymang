@@ -16,8 +16,7 @@ config = {
 parser = argparse.ArgumentParser(description='Github webhook event listener.')
 parser.add_argument('--pubkpath', required=True, help='Path to the SSH public key.')
 parser.add_argument('--prvkpath', required=True, help='Path to the SSH private key.')
-parser.add_argument('--pkpasswd', required=True,
-                    help='Keypair password')
+parser.add_argument('--pkpasswd', required=True, help='Keypair password')
 parser.add_argument('--signature', required=True, help='Signature token as configured in your repository\'s settings.')
 parser.add_argument('--giturl', help='Repository url used if no config file is cached.')
 arguments = parser.parse_args()
@@ -86,13 +85,10 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 def main():
     print('======================= Ferrymang =======================')
-    if len(sys.argv) > 1:
-        print('Ferrymang is now listening on port ' + str(config['port']) + '...')
-        httpd = HTTPServer(('127.0.0.1', config['port']), RequestHandler)
-        httpd.serve_forever()
-    else:
-        print('Must specify Github token.')
-        print('Ex: python ferrymang.py "nbuyev56uyyku89HGRG%?jyn9"')
+    print('Ferrymang is now listening on port ' + str(config['port']) + '...')
+    httpd = HTTPServer(('127.0.0.1', config['port']), RequestHandler)
+    httpd.serve_forever()
+
 
 
 main()
