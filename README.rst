@@ -21,13 +21,20 @@ Installation
 ------------
 
 Requirements:
+
 * python3.x
 * libssh2: http://www.libssh2.org/
 * pygit2: http://www.pygit2.org/install.html
 
 Usage
 -----
-ferrymang.py [-h] --pubkpath PUBKPATH --prvkpath PRVKPATH --pkpasswd PKPASSWD --pkusername PKUSERNAME --signature SIGNATURE [--giturl GITURL]
+usage: ferrymang.py [-h] --signature SIGNATURE --pubkpath PUBKPATH --prvkpath PRVKPATH --pkpasswd PKPASSWD [--giturl GITURL]
+
+* signature : The github token as configured in your repository settings pages
+* pubkpath : The path to your public ssh key
+* prvkpath : The path to your private ssh key
+* pkpasswd : The password to decrypt your ssh key
+* giturl : The url of the repository which will be used to download your ferrymang.json configuration file if the cached version is unavailable for any reason.
 
 Features
 --------
