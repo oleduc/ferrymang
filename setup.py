@@ -21,7 +21,7 @@ test_requirements = [
 
 setup(
     name='ferrymang',
-    version='0.1.0',
+    version='0.3.1',
     description='A git deployment tool.',
     long_description=readme + '\n\n' + history,
     author='Olivier Leduc',

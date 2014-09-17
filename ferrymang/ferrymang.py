@@ -53,17 +53,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             print('Got an invalid signature, abort')
             self.respond(401)
 
-    def verifySignature(self, parsed_request):
-        github_signature = self.headers.get('X-Hub-Signature')
-        if len(self.signature) > 0:
-            hmac_obj = hmac.new(str.encode(self.signature), parsed_request['raw'], 'sha1')
-            secret_key = 'sha1=' + hmac_obj.hexdigest()
-
-            return secret_key == github_signature
-        else:
-            print('No signature')
-            return False
-
     def parse(self):
         length = int(self.headers.get('content-length'))
         body = self.rfile.read(length)
@@ -81,6 +70,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header('content-type', 'text/html')
         self.end_headers()
+
+    def verifySignature(self, parsed_request):
+        github_signature = self.headers.get('X-Hub-Signature')
+        if len(self.signature) > 0:
+            hmac_obj = hmac.new(str.encode(self.signature), parsed_request['raw'], 'sha1')
+            secret_key = 'sha1=' + hmac_obj.hexdigest()
+
+            return secret_key == github_signature
+        else:
+            print('No signature')
+            return False
 
 
 def main():
