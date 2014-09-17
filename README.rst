@@ -39,49 +39,49 @@ Supported variables:
 Example:
 
 .. code:: json
-{
-  "root": "/var/applications/",
-  "applications": {
-      "app-one": {
-          "path": "./app-one-{branch}/",
-          "main": true,
-          "start": {
-              "commands": [
-                  "npm install",
-                  "forever start --uid \"api-{branch}\" {path}/app.js"
-              ],
+    {
+      "root": "/var/applications/",
+      "applications": {
+          "app-one": {
+              "path": "./app-one-{branch}/",
+              "main": true,
+              "start": {
+                  "commands": [
+                      "npm install",
+                      "forever start --uid \"api-{branch}\" {path}/app.js"
+                  ],
+              },
+              "stop": {
+                  "path": "./stop.sh",
+                  "parameters": "{branch}"
+              }
           },
-          "stop": {
-              "path": "./stop.sh",
-              "parameters": "{branch}"
+          "app-two":{
+              "path": "./app-two-server/",
+              "main": false,
+              "start": {
+                  "path": "./start.sh",
+                  "parameters": "{branch} arg2 {path} etc"
+              },
+              "stop": {
+                  "command": "forever stop --uid app-two {path}/app.js",
+                  "parameters": "{branch}"
+              }
           }
       },
-      "app-two":{
-          "path": "./app-two-server/",
-          "main": false,
-          "start": {
-              "path": "./start.sh",
-              "parameters": "{branch} arg2 {path} etc"
+      "actions" : [
+          {
+              "type": "move",
+              "from": "./some-cloned-folder-relative-to-repo-root/config/*",
+              "to"  : "./some-folder-relative-to-configured-root/config/"
           },
-          "stop": {
-              "command": "forever stop --uid app-two {path}/app.js",
-              "parameters": "{branch}"
+          {
+              "type": "move",
+              "from": "./home/config/example",
+              "to"  : "./app-two/config.json"
           }
-      }
-  },
-  "actions" : [
-      {
-          "type": "move",
-          "from": "./some-cloned-folder-relative-to-repo-root/config/*",
-          "to"  : "./some-folder-relative-to-configured-root/config/"
-      },
-      {
-          "type": "move",
-          "from": "./home/config/example",
-          "to"  : "./app-two/config.json"
-      }
-  ]
-}
+      ]
+    }
 
 
 Features
