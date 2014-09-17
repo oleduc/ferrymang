@@ -38,7 +38,7 @@ Supported variables:
 
 Example:
 
-```js
+.. code:: json
 {
   "root": "/var/applications/",
   "applications": {
@@ -82,7 +82,7 @@ Example:
       }
   ]
 }
-```
+
 
 Features
 --------
