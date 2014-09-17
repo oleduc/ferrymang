@@ -37,7 +37,7 @@ Supported variables:
 * {random} : A random variable [*]
 
 Example:
-```
+```js
 {
   "root": "/var/applications/",
   "applications": {
