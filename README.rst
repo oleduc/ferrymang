@@ -29,4 +29,13 @@ usage: ferrymang.py [-h] --signature SIGNATURE --pubkpath PUBKPATH --prvkpath PR
 Features
 --------
 
-* TODO
+* Listen to github push events
+* Clone one or multiple git repositories
+* Parse a list of actions (JSON) and execute it
+* Execute start/stop scripts
+
+Todo
+____
+
+* Database deployment
+* Multiple repositories
