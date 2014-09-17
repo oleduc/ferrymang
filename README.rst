@@ -39,6 +39,7 @@ Supported variables:
 Example:
 
 .. code:: javascript
+
     {
       "root": "/var/applications/",
       "applications": {
