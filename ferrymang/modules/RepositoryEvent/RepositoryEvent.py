@@ -30,27 +30,30 @@ class RepositoryEvent():
     def clone(self, url):
         FileSystem.delete(self.tmpRepoDir)
         if FileSystem.createDirectory(self.tmpRepoDir):
+            print('Downloading repository...')
             repository = clone_repository(url, self.tmpRepoDir, credentials=self.Keypair, checkout_branch=self.branch)
+            print('Done.')
             return not repository.is_empty
         return False
 
     def deploy(self):
         self.clean()
+        if not self.config['init']:
+            self.clone(self.url)
 
         # Read current version's config
         self.config = self.parseConfig(FileSystem.join(self.tmpRepoDir, self.configFileName))
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(self.config)
-        # Do actions
+
+        # Copy current config to config cache
+        if FileSystem.delete(self.tmpCacheDir) and FileSystem.createDirectory(self.tmpCacheDir):
+            if FileSystem.copy(FileSystem.join(self.tmpRepoDir, self.configFileName), self.tmpCacheDir):
+                print('Cached configuration file.')
 
         if self.config['actions']:
-            print(type(self.config['actions']))
             for actions in self.config['actions']:
                 if actions['type'] == 'move':
                     print('Executing move action')
                     to_path = FileSystem.join(self.config['root'], actions['to'])
-                    # TODO: Move to own method
-                    to_path = to_path.replace('{branch}', self.branch)
                     to_path = FileSystem.resolve(to_path)
                     if actions['to'][-1:] == '/' and not FileSystem.dirExists(to_path):
                         FileSystem.createDirectory(to_path)
@@ -61,42 +64,44 @@ class RepositoryEvent():
                     FileSystem.move(from_path, to_path)
                     print('Done...')
 
-        # Run start scripts
+        self.runScripts(self.config['start'])
 
-        # Copy current config to config cache
         # Delete TMP folder
-
-        # Done
+        if FileSystem.delete(self.tmpRepoDir):
+            print('Successfully deleted temporary repository directory.')
 
         return True
 
     def clean(self):
 
-        if self.config['applications']:
-            for key in self.config['applications']:
-                print(self.config['applications'][key]['path'])
-                stop_script_path = FileSystem.join(self.config['applications'][key]['path'], self.config['stop'])
-                stop_script_path = FileSystem.resolve(stop_script_path)
-                if FileSystem.fileExists(stop_script_path):
-                    if subprocess.call(stop_script_path, shell=True):
-                        FileSystem.delete(FileSystem.resolve(self.config['applications'][key]['path']))
+        self.runScripts(self.config['stop'])
+        self.deleteApplicationsRoots()
 
-        FileSystem.delete(self.tmpCacheDir)
+        FileSystem.delete(FileSystem.join(self.tmpCacheDir, self.configFileName))
 
         return
+
+    def deleteApplicationsRoots(self):
+        if self.config['applications']:
+            for key in self.config['applications']:
+                if FileSystem.exists(self.config['applications'][key]['path']):
+                    print('Delete applications root', self.config['applications'][key]['path'])
+                    FileSystem.delete(FileSystem.resolve(self.config['applications'][key]['path']))
 
     def runScripts(self, name):
         if self.config['applications']:
             for key in self.config['applications']:
-                print(self.config['applications'][key]['path'])
                 script_path = FileSystem.join(self.config['applications'][key]['path'], name)
                 script_path = FileSystem.resolve(script_path)
                 if FileSystem.fileExists(script_path):
+                    print('Running script', script_path)
                     if subprocess.call(script_path, shell=True):
-                        print('Ran script successfully')
+                        print('Ran script successfully', script_path)
                         FileSystem.delete(FileSystem.resolve(self.config['applications'][key]['path']))
                     else:
-                        print('Ran script but unsuccessfully')
+                        print('Ran script but unsuccessfully', script_path)
+                else:
+                    print('Failed to run a script; unavailable script', script_path)
 
     def loadCachedConfig(self):
         config_obj = {}
@@ -104,13 +109,27 @@ class RepositoryEvent():
         if FileSystem.fileExists(cached_config_path):
             print('File exists load config.')
             config_obj = self.parseConfig(cached_config_path)
+            config_obj['init'] = False
         elif self.gitInitUrl:
-            print('Get repository from command line.')
+            print('No cached configuration, download from github')
             if self.clone(self.gitInitUrl):
                 config_obj = self.parseConfig(FileSystem.join(self.tmpRepoDir, self.configFileName))
+            config_obj['init'] = True
         return config_obj
 
     def parseConfig(self, path):
         raw_content = FileSystem.readFile(path)
         parsed_content = json.loads(raw_content)
-        return parsed_content
+        results = self.replacePathsVariables(parsed_content)
+        # pp = pprint.PrettyPrinter(indent=4)
+        # pp.pprint(results)
+        return results
+
+    def replacePathsVariables(self, config):
+        for key in config['applications']:
+            application_config = config['applications'][key]
+            config['applications'][key]['path'] = application_config['path'].replace('{branch}', self.branch)
+        for action in config['actions']:
+            action['to'] = action['to'].replace('{branch}', self.branch)
+
+        return config
