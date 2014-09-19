@@ -9,16 +9,14 @@ from modules.RepositoryEvent.RepositoryEvent import RepositoryEvent
 # from time import sleep
 # from daemonize import Daemonize
 
-config = {
-    'port': 5454
-}
-
 parser = argparse.ArgumentParser(description='Github webhook event listener.')
 parser.add_argument('--pubkpath', required=True, help='Path to the SSH public key.')
 parser.add_argument('--prvkpath', required=True, help='Path to the SSH private key.')
 parser.add_argument('--pkpasswd', required=True, help='Keypair password')
 parser.add_argument('--signature', required=True, help='Signature token as configured in your repository\'s settings.')
 parser.add_argument('--giturl', help='Repository url used if no config file is cached.')
+parser.add_argument('--ip', help='IP the application will be listening on. Defaults to 127.0.0.1')
+parser.add_argument('--port', type=int, help='Port the application will be listening on. Defaults to 5454')
 arguments = parser.parse_args()
 
 
@@ -84,9 +82,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 def main():
+    port = arguments.port or 5454
+    ip = arguments.ip or '127.0.0.1'
     print('======================= Ferrymang =======================')
-    print('Ferrymang is now listening on port ' + str(config['port']) + '...')
-    httpd = HTTPServer(('127.0.0.1', config['port']), RequestHandler)
+    print('Ferrymang is now listening on ' + ip + ':' + str(port) + '...')
+    httpd = HTTPServer((ip, port), RequestHandler)
     httpd.serve_forever()
 
 

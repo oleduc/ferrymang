@@ -12,7 +12,7 @@ Installation
 
 Requirements:
 
-* python3.x
+* python3.4
 * libssh2: http://www.libssh2.org/
 * pygit2: http://www.pygit2.org/install.html
 
