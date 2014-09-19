@@ -18,7 +18,7 @@ Requirements:
 
 Usage
 -----
-usage: ferrymang.py [-h] --signature SIGNATURE --pubkpath PUBKPATH --prvkpath PRVKPATH --pkpasswd PKPASSWD [--giturl GITURL]
+usage: ferrymang.py [-h] --pubkpath PUBKPATH --prvkpath PRVKPATH --pkpasswd PKPASSWD --signature SIGNATURE [--giturl GITURL] [--ip IP] [--port PORT]
 
 * signature : The github token as configured in your repository settings pages
 * pubkpath : The path to your public ssh key
