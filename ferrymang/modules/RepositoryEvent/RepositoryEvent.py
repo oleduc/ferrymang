@@ -57,7 +57,6 @@ class RepositoryEvent():
         if self.config['actions']:
             for actions in self.config['actions']:
                 if actions['type'] == 'move':
-                    print('Executing move action')
                     to_path = FileSystem.join(self.config['root'], actions['to'])
                     to_path = FileSystem.resolve(to_path)
                     if actions['to'][-1:] == '/' and not FileSystem.dirExists(to_path):
