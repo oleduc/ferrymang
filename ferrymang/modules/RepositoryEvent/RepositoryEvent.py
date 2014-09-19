@@ -136,8 +136,8 @@ class RepositoryEvent():
         raw_content = FileSystem.readFile(path)
         parsed_content = json.loads(raw_content)
         results = self.replaceConfigVariables(parsed_content)
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(results)
+        # pp = pprint.PrettyPrinter(indent=4)
+        # pp.pprint(results)
         return results
 
     def rootAndResolve(self, path):
@@ -149,7 +149,6 @@ class RepositoryEvent():
 
         for top_key in config:
             key_type = type(config[top_key])
-            print('Iterating', top_key)
             config[top_key] = self.configVarIterator(config[top_key])
 
         return config
