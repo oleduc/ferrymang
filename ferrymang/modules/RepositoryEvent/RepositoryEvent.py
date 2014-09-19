@@ -157,9 +157,7 @@ class RepositoryEvent():
     def configVarIterator(self, var):
         key_type = type(var)
         if key_type == str:
-            print('BREFORE REPLACE', var)
             var = var.replace('{branch}', self.branch)
-            print('AFTER REPLACE', var)
             return var
         if key_type == dict:
             for dic_key in var:
