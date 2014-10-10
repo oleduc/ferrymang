@@ -77,6 +77,14 @@ Example:
               "to"  : "./some-folder-relative-to-configured-root/config/"
           },
           {
+              "type": "delete",
+              "path": "./some-folder-relative-to-configured-root/config/"
+          },
+          {
+              "type": "mkdir",
+              "path": "./some-folder-relative-to-configured-root/config/"
+          },
+          {
               "type": "move",
               "from": "./home/config/example",
               "to"  : "./app-two/config.json"

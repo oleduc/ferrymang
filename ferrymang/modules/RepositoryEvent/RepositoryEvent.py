@@ -64,9 +64,29 @@ class RepositoryEvent():
 
                     from_path = FileSystem.join(self.tmpRepoDir, actions['from'])
                     from_path = FileSystem.resolve(from_path)
-                    print('MOVE', from_path, to_path)
+                    print('ACTION: MOVING.', from_path, to_path)
                     FileSystem.move(from_path, to_path)
-                    print('Done...')
+                    print('OK: Moved.')
+                elif actions['type'] == 'mkdir':
+                    path = FileSystem.join(self.config['root'], actions['path'])
+                    print('ACTION: MKDIR: ' + path)
+                    if not FileSystem.exists(path):
+                        if FileSystem.createDirectory(path):
+                            print('OK: Directory created.')
+                        else:
+                            print('ERROR: Could not create directory.')
+                    else:
+                        print('ERROR: Already exists. Nothing to do.')
+                elif actions['type'] == 'delete':
+                    path = FileSystem.join(self.config['root'], actions['path'])
+                    if not FileSystem.exists(path):
+                        print('Path marked for deletion does not exits. Nothing to do.')
+                    else:
+                        print('ACTION: DELETING ' + path)
+                        if FileSystem.delete(path):
+                            print('OK: File or directory deleted')
+                        else:
+                            print('ERROR: Could not delete path: '+path)
 
         self.runScripts('start')
 
