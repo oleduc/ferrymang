@@ -2,11 +2,12 @@
 Installation
 ============
 
-At the command line::
+This package doesn't have a properly package release yet.
 
-    $ easy_install ferrymang
+Requirements:
 
-Or, if you have virtualenvwrapper installed::
+* python3.4
+* libssh2: http://www.libssh2.org/
+* pygit2: http://www.pygit2.org/install.html
 
-    $ mkvirtualenv ferrymang
-    $ pip install ferrymang
+Run ferrymang.py directly.
