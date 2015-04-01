@@ -2,7 +2,7 @@
 Ferrymang
 ===============================
 
-A simple github deployment tool.
+A simple github deployment tool. This project goal was mostly to learn more about the github API, use at your own risk.
 
 * Free software: BSD license
 * Documentation: https://ferrymang.readthedocs.org.
